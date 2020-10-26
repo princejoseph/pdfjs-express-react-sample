@@ -9,27 +9,55 @@ const App = () => {
   useEffect(() => {
     WebViewer(
       {
-        path: '/webviewer/lib',
-        initialDoc: '/files/pdftron_about.pdf',
+        path: '/webviewer/7.1.2',
+        initialDoc: '/files/MAWB8CopiesF.pdf',
       },
       viewer.current,
     ).then((instance) => {
-      const { docViewer, Annotations } = instance;
+      const { docViewer, Annotations, FitMode } = instance;
       const annotManager = docViewer.getAnnotationManager();
 
-      docViewer.on('documentLoaded', () => {
-        const rectangleAnnot = new Annotations.RectangleAnnotation();
-        rectangleAnnot.PageNumber = 1;
-        // values are in page coordinates with (0, 0) in the top left
-        rectangleAnnot.X = 100;
-        rectangleAnnot.Y = 150;
-        rectangleAnnot.Width = 200;
-        rectangleAnnot.Height = 50;
-        rectangleAnnot.Author = annotManager.getCurrentUser();
+      const setInitialStyles = () => {
+        const customStyles = widget => {
+          if (widget instanceof Annotations.TextWidgetAnnotation) {
+            return {
+              "background-color": "lightblue",
+              color: "black",
+            };
+          }
+        };
+        const customContainerStyles = widget => {
+          if (widget instanceof Annotations.WidgetAnnotation) {
+            return {
+              border: "2px solid green",
+            };
+          }
+        };
+        Annotations.WidgetAnnotation.getCustomStyles = customStyles;
+        Annotations.WidgetAnnotation.getContainerCustomStyles = customContainerStyles;
+      };
 
-        annotManager.addAnnotation(rectangleAnnot);
-        // need to draw the annotation otherwise it won't show up until the page is refreshed
-        annotManager.redrawAnnotation(rectangleAnnot);
+      const fillForm = data => {
+        docViewer.getAnnotationsLoadedPromise().then(() => {
+          const fieldManager = annotManager.getFieldManager();
+          fieldManager.forEachField(field => {
+            field.setValue(data[field.name] || "");
+          });
+        });
+      };
+
+      instance.setFitMode(FitMode.FitWidth);
+
+      docViewer.on('documentLoaded', () => {
+        // Add custom styles for form fields
+        setInitialStyles();
+
+        // Fill initial data for the form
+        fillForm({
+          'PickupCompany': 'Demo Company',
+          'PickupStreet': 'Demo Street',
+          'ShipperAddressLine3': 'Demo City, Demo State, Demo zip'
+        });
       });
     });
   }, []);
