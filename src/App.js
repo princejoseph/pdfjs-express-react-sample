@@ -46,7 +46,7 @@ const App = () => {
         });
       };
 
-      instance.setFitMode(FitMode.FitWidth);
+      // instance.setFitMode(FitMode.FitWidth);
 
       docViewer.on('documentLoaded', () => {
         // Add custom styles for form fields
